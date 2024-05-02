@@ -1,6 +1,6 @@
 import {Request} from 'express';
 import {Controller} from '../util/requestHandler.config';
-import {hash, compare} from 'bcrypt';
+import {hash, compare} from 'bcryptjs';
 import createHttpError from 'http-errors';
 import crypto from 'crypto';
 import {default_transporter} from '../util/nodemailer.config';
