@@ -2,8 +2,6 @@ import {Request} from 'express';
 import {Controller} from '../util/requestHandler.config';
 import {hash, compare} from 'bcrypt';
 import createHttpError from 'http-errors';
-import User from '../models/user';
-import VerificationCode from '../models/user_verification_code';
 import crypto from 'crypto';
 import {default_transporter} from '../util/nodemailer.config';
 import prisma from '../util/db.connection';
@@ -49,7 +47,7 @@ export default Controller({
 
     const rand = crypto.randomInt(1000, 9999).toString();
 
-    const userCode = await prisma.verficationCode.create({
+    const otp = await prisma.verficationCode.create({
       data: {
         userId: id,
         code: rand,
@@ -61,7 +59,7 @@ export default Controller({
       from: 'RCN Global Network',
       to: user.email,
       subject: 'Email verification code',
-      html: `<p>This is your verification code. It will expire in 15 minutes.</p><strong>${userCode.code}</strong>`,
+      html: `<p>This is your verification code. It will expire in 15 minutes.</p><strong>${otp.code}</strong>`,
       replyTo: 'noreply@rcn.com'
     });
 
@@ -70,47 +68,44 @@ export default Controller({
       userId: id
     });
   },
+
   async verifyEmail(req: Request<any, any, Verify>, res) {
     const {code, userId} = req.body;
 
-    const user = await User.findById(userId);
+    const user = await prisma.user.findUnique({where: {id: userId}});
 
     if (!user) throw createHttpError(404, 'User not found');
 
-    const codeExists = await VerificationCode.findOne({
-      userId,
-      action: 'email-verification'
+    const codeExists = await prisma.verficationCode.findUnique({
+      where: {userId_action: {userId, action: 'EMAIL_VERIFICATION'}}
     });
 
     if (!codeExists)
       throw createHttpError(403, 'Code expired, request new code');
 
-    if (codeExists.otp !== code)
+    if (codeExists.code !== code)
       throw createHttpError(403, 'Invalid code, retry');
 
-    await User.findByIdAndUpdate(user._id, {
-      emailVerified: true
+    await prisma.user.update({
+      where: {id: user.id},
+      data: {emailVerified: true}
     });
 
-    await codeExists.deleteOne();
+    await prisma.verficationCode.delete({where: {id: codeExists.id}});
 
     return res.status(200).send('Email verification successful');
   },
+
   //TODO Implement resending verification email flow
   async resendVerificationCode(req, res) {
-    const date15MinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    //Return a document that was created over 15 mins ago
-    const user = await User.findOne({
-      createdAt: {$lt: date15MinutesAgo}
-    });
-
-    return res.status(200).json(user);
+    return res.status(200).json('Okay');
   },
+
   //TODO Implement session here
   async login(req: Request<any, any, Login>, res) {
     const {email, password} = req.body;
 
-    const user = await User.findOne({email});
+    const user = await prisma.user.findUnique({where: {email}});
 
     if (!user) throw createHttpError(403, 'Invalid email or password');
 
@@ -120,29 +115,31 @@ export default Controller({
 
     return res.status(200).json('Log in success');
   },
+
   async sendPasswordResetMail(req: Request<any, any, ResetPasswordMail>, res) {
     const {email} = req.body;
 
-    const user = await User.findOne({email});
+    const user = await prisma.user.findUnique({where: {email}});
 
     if (!user) throw createHttpError(403, 'User not found');
 
     const rand = crypto.randomInt(1000, 9999).toString();
 
-    const userCode = await VerificationCode.create({
-      userId: user._id,
-      otp: rand,
-      action: 'password-reset'
+    const otp = await prisma.verficationCode.create({
+      data: {
+        userId: user.id,
+        code: rand,
+        action: 'PASSWORD_RESET'
+      }
     });
 
-    if (!userCode)
-      throw createHttpError(403, 'Could not create verification code');
+    if (!otp) throw createHttpError(403, 'Could not create verification code');
 
     const mailResponse = await default_transporter.sendMail({
       from: 'RCN Global Network',
       to: user.email,
       subject: 'Password reset code',
-      html: `<p>This is your password reset code. It expires in 15 minutes.</p><strong>${userCode.otp}</strong>`,
+      html: `<p>This is your password reset code. It expires in 15 minutes.</p><strong>${otp.code}</strong>`,
       replyTo: 'noreply@rcn.com'
     });
 
@@ -150,32 +147,31 @@ export default Controller({
       .status(200)
       .json('Check your email for your password reset code');
   },
-  async verifyPasswordResetCode(req: Request<any, any, Verify>, res) {
-    const {code, userId} = req.body;
 
-    const userCode = await VerificationCode.findOne({
-      otp: code,
-      userId,
-      action: 'password-reset'
+  async verifyPasswordResetCode(req: Request<{}, {}, Verify>, res) {
+    const {code, userId} = req.body;
+    const otp = await prisma.verficationCode.findFirst({
+      where: {code, userId, action: 'PASSWORD_RESET'}
     });
 
-    if (!userCode) throw createHttpError(403, 'Code expired, request new code');
+    if (!otp) throw createHttpError(403, 'Code expired, request new code');
 
-    if (code !== userCode.otp)
+    if (code !== otp.code)
       throw createHttpError(403, 'Invalid code, try again');
 
     return res.status(200).json('Verified');
   },
+
   async changePassword(req: Request<any, any, ChangePassword>, res) {
     const {password, userId} = req.body;
 
-    const user = await User.findById(userId);
+    const user = await prisma.user.findUnique({where: {id: userId}});
 
     if (!user) throw createHttpError(403, 'User not found');
 
     const hashedPW = await hash(password, 10);
 
-    await User.updateOne({_id: user.id}, {password: hashedPW});
+    await prisma.user.update({where: {id: userId}, data: {password: hashedPW}});
 
     return res.status(200).json('Password changed');
   }

@@ -41,6 +41,8 @@ model VerficationCode {
   action    Action
   createdAt DateTime @default(now())
 
+  @@unique([userId, action])
+  @@index([createdAt], map: "createdAt_1")
   @@map("verification-codes")
 }
 
