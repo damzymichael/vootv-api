@@ -21,9 +21,13 @@ model User {
   password         String
   emailVerified    Boolean           @default(false)
   role             Role
+  locationId       String?           @db.ObjectId
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   verficationCodes VerficationCode[]
+  payments         Payment[]
+  testimonies      Testimony[]
 
   @@map("users")
 }
@@ -59,6 +63,10 @@ model Location {
   pastorInCharge String
   mapLocation    MapLocation?
   services       Service[]
+  users          User[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  programs       Program[]
 
   @@unique([country, state, pastorInCharge])
   @@map("locations")
@@ -66,12 +74,14 @@ model Location {
 
 model Service {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  locationId String   @db.ObjectId
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   day        String
   theme      String
   startTime  String
   endTime    String
+  locationId String   @db.ObjectId
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([theme, day])
   @@map("services")
@@ -79,8 +89,55 @@ model Service {
 
 model Audio {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  link         String
   timeRecorded DateTime
   preacher     String
+  createdAt    DateTime @default(now())
 
   @@map("audios")
+}
+
+model Payment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount        Int
+  date          DateTime @default(now())
+  userId        String   @db.ObjectId
+  users         User     @relation(fields: [userId], references: [id])
+  paymentMethod String
+  createdAt     DateTime @default(now())
+
+  @@map("payments")
+}
+
+model Testimony {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("testimonies")
+}
+
+enum ProgramType {
+  PROGRAM
+  EVENT
+}
+
+model Program {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  type       ProgramType
+  theme      String
+  startTime  DateTime
+  endTime    DateTime
+  banner     String
+  ministers  String[]
+  locationId String      @db.ObjectId
+  location   Location    @relation(fields: [locationId], references: [id])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("programs")
 }

@@ -8,6 +8,7 @@ import userRoutes from './routes/user';
 import audioRoutes from './routes/audio';
 import locationRoutes from './routes/location';
 import serviceRoutes from './routes/service';
+import testimonyRoutes from './routes/testimony';
 import testRoutes from './test';
 
 const homeMessage = `
@@ -37,6 +38,7 @@ app.use('/user', userRoutes);
 app.use('/audio', audioRoutes);
 app.use('/location', locationRoutes);
 app.use('/service', serviceRoutes);
+app.use('/testimony', testimonyRoutes);
 
 //? FOR TESTS
 app.use('/tests', testRoutes);

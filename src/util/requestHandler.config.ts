@@ -16,12 +16,7 @@ const asyncWrapper = (fn: RequestHandler) => {
   };
 };
 
-/* 
-Request params
-idk the second
-Request body
-Request query
-*/
+/* Request params, {}, Request body, Request query */
 
 export const Controller = <T extends {[K in keyof T]: RequestHandler}>(
   controllers: T

@@ -1,6 +1,6 @@
-import Redis from 'ioredis';
+// import Redis from 'ioredis';
 
-//TODO Add production port
-const redisClient = new Redis({maxRetriesPerRequest: null});
+// //TODO Add production port
+// const redisClient = new Redis({maxRetriesPerRequest: null});
 
-export default redisClient;
+// export default redisClient;

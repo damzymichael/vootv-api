@@ -28,10 +28,21 @@ export default Controller({
   async getLocations(req, res) {
     const locations = await prisma.location.findMany();
 
-    res.status(200).json(locations);
+    return res.status(200).json(locations);
   },
 
-  async getLocation() {},
+  async getLocation(req: Request<{id: string}>, res) {
+    const {id} = req.params;
+
+    const location = await prisma.location.findUnique({
+      where: {id},
+      include: {services: true}
+    });
+
+    if (!location) throw createHttpError('Location does not exist');
+
+    return res.status(200).json(location);
+  },
 
   async updateLocation(req: Request<{id: string}, {}, LocationBody>, res) {
     const {id} = req.params;

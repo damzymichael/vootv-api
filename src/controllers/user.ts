@@ -6,11 +6,13 @@ import crypto from 'crypto';
 import {default_transporter} from '../util/nodemailer.config';
 import prisma from '../util/db.connection';
 
-interface Register {
+interface UserSchema {
   email: string;
   fullName: string;
   password: string;
   phoneNumber: string;
+  dateOfBirth?: Date;
+  locationId?: string;
 }
 
 interface Verify {
@@ -18,15 +20,15 @@ interface Verify {
   userId: string;
 }
 
-type ResetPasswordMail = Pick<Register, 'email'>;
+type ResetPasswordMail = Pick<UserSchema, 'email'>;
 
 type ChangePassword = {password: string; userId: string};
 
-type Login = Pick<Register, 'email' | 'password'>;
+type Login = Pick<UserSchema, 'email' | 'password'>;
 
 //TODO Refactor finding user into middleware
 export default Controller({
-  async register(req: Request<{}, {}, Register>, res) {
+  async register(req: Request<{}, {}, UserSchema>, res) {
     const {email, password, phoneNumber} = req.body;
 
     const exists = await prisma.user.findFirst({
@@ -162,7 +164,7 @@ export default Controller({
     return res.status(200).json('Verified');
   },
 
-  async changePassword(req: Request<any, any, ChangePassword>, res) {
+  async changePassword(req: Request<{}, {}, ChangePassword>, res) {
     const {password, userId} = req.body;
 
     const user = await prisma.user.findUnique({where: {id: userId}});
@@ -174,5 +176,17 @@ export default Controller({
     await prisma.user.update({where: {id: userId}, data: {password: hashedPW}});
 
     return res.status(200).json('Password changed');
+  },
+
+  async updateAccount(req: Request<{userId: string}, {}, UserSchema>, res) {
+    const {userId} = req.params;
+
+    const user = await prisma.user.findUnique({where: {id: userId}});
+
+    if (!user) throw createHttpError(403, 'User not found');
+
+    await prisma.user.update({where: {id: user.id}, data: req.body});
+
+    return res.status(200).json('Account details updated');
   }
 });
