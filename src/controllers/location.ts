@@ -1,31 +1,32 @@
 import {Request} from 'express';
 import {Controller} from '../util/requestHandler.config';
 import createHttpError from 'http-errors';
-import Location from '../models/location';
-
+import prisma from '../util/db.connection';
 interface LocationBody {
   country: string;
   state: string;
   address: string;
   pastorInCharge: string;
-  mapLocation?: string;
+  mapLocation?: {longitude: number; latitude: number};
 }
 
 export default Controller({
   async addLocation(req: Request<{}, {}, LocationBody>, res) {
-    const {country, state} = req.body;
+    const {country, state, pastorInCharge} = req.body;
 
-    const locationExists = await Location.findOne({country, state});
+    const locationExists = await prisma.location.findUnique({
+      where: {country_state_pastorInCharge: {country, state, pastorInCharge}}
+    });
 
-    if (locationExists) throw createHttpError(403, 'Location added');
+    if (locationExists) throw createHttpError(403, 'Location exists');
 
-    await Location.create(req.body);
+    await prisma.location.create({data: req.body});
 
     return res.status(201).send('New location added');
   },
 
   async getLocations(req, res) {
-    const locations = await Location.find({}).populate({path: 'services'});
+    const locations = await prisma.location.findMany();
 
     res.status(200).json(locations);
   },
@@ -35,11 +36,11 @@ export default Controller({
   async updateLocation(req: Request<{id: string}, {}, LocationBody>, res) {
     const {id} = req.params;
 
-    const location = await Location.findById(id);
+    const location = await prisma.location.findUnique({where: {id}});
 
     if (!location) throw createHttpError(403, 'Location not found');
 
-    await location.updateOne(req.body);
+    await prisma.location.update({where: {id: location.id}, data: req.body});
 
     return res.status(200).send('Location details updated');
   }

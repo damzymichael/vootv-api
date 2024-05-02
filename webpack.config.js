@@ -1,33 +1,33 @@
-const path = require("path");
-const TerserPlugin = require("terser-webpack-plugin");
-const nodeExternals = require("webpack-node-externals");
+const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
-  entry: "./src/index.ts",
+  entry: './src/index.ts',
   module: {
     rules: [
       {
         test: /\.ts$/,
-        use: "ts-loader",
-        include: [path.resolve(__dirname, "src")],
-        exclude: /node_modules/,
-      },
-    ],
+        use: 'ts-loader',
+        include: [path.resolve(__dirname, 'src')],
+        exclude: [/node_modules/, '/src/test']
+      }
+    ]
   },
-  target: "node",
+  target: 'node',
   externals: [nodeExternals()],
   resolve: {
-    extensions: [".ts", ".js"],
+    extensions: ['.ts', '.js']
   },
-  devtool: "source-map",
+  devtool: 'source-map',
   output: {
-    publicPath: "public",
-    filename: "index.js",
-    path: path.resolve(__dirname, "dist"),
+    publicPath: 'public',
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'dist')
   },
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin()],
   },
-  mode: "production",
+  mode: 'production'
 };

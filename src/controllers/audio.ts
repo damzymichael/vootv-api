@@ -1,4 +1,3 @@
-import Audio from '../models/audio';
 import {Controller} from '../util/requestHandler.config';
 import createHttpError from 'http-errors';
 import {authorize, uploadFile} from '../util/googleDrive';
