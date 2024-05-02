@@ -6,6 +6,7 @@ import User from '../models/user';
 import VerificationCode from '../models/user_verification_code';
 import crypto from 'crypto';
 import {default_transporter} from '../util/nodemailer.config';
+import prisma from '../util/db.connection';
 
 interface Register {
   email: string;
@@ -27,10 +28,12 @@ type Login = Pick<Register, 'email' | 'password'>;
 
 //TODO Refactor finding user into middleware
 export default Controller({
-  async register(req: Request<any, any, Register>, res) {
+  async register(req: Request<{}, {}, Register>, res) {
     const {email, password, phoneNumber} = req.body;
 
-    const exists = await User.findOne({$or: [{email}, {phoneNumber}]});
+    const exists = await prisma.user.findFirst({
+      where: {OR: [{email}, {phoneNumber}]}
+    });
 
     if (exists)
       throw createHttpError(403, 'Account already exists, please login');
@@ -38,29 +41,33 @@ export default Controller({
     const hashedPW = await hash(password, 10);
 
     //* Add role of user by default
-    const user = await User.create({...req.body, hashedPW, role: 'user'});
+    const user = await prisma.user.create({
+      data: {...req.body, password: hashedPW, role: 'USER'}
+    });
 
-    const {email: _email, _id} = user;
+    const {email: _email, id} = user;
 
     const rand = crypto.randomInt(1000, 9999).toString();
 
-    const userCode = await VerificationCode.create({
-      userId: _id,
-      otp: rand,
-      action: 'email-verification'
+    const userCode = await prisma.verficationCode.create({
+      data: {
+        userId: id,
+        code: rand,
+        action: 'EMAIL_VERIFICATION'
+      }
     });
 
     const mailResponse = await default_transporter.sendMail({
       from: 'RCN Global Network',
       to: user.email,
       subject: 'Email verification code',
-      html: `<p>This is your verification code. It will expire in 15 minutes.</p><strong>${userCode.otp}</strong>`,
+      html: `<p>This is your verification code. It will expire in 15 minutes.</p><strong>${userCode.code}</strong>`,
       replyTo: 'noreply@rcn.com'
     });
 
     return res.status(200).json({
       message: 'Verification code sent to email address',
-      userId: _id
+      userId: id
     });
   },
   async verifyEmail(req: Request<any, any, Verify>, res) {

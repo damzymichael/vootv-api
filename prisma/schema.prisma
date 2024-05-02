@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  fullName         String
+  email            String            @unique
+  phoneNumber      String            @unique
+  dateOfBirth      DateTime?
+  password         String
+  emailVerified    Boolean           @default(false)
+  role             Role
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  verficationCodes VerficationCode[]
+
+  @@map("users")
+}
+
+enum Action {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model VerficationCode {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  code      String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    Action
+  createdAt DateTime @default(now())
+
+  @@map("verification-codes")
+}
+
+type MapLocation {
+  longitude Int
+  latitude  Int
+}
+
+model Location {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  country        String
+  state          String
+  address        String
+  pastorInCharge String
+  mapLocation    MapLocation?
+  services       Service[]
+
+  @@unique([country, state, pastorInCharge])
+  @@map("locations")
+}
+
+model Service {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  locationId String   @db.ObjectId
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  day        String
+  theme      String
+  startTime  String
+  endTime    String
+
+  @@unique([theme, day])
+  @@map("services")
+}
+
+model Audio {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  timeRecorded DateTime
+  preacher     String
+
+  @@map("audios")
+}
