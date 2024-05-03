@@ -1,12 +1,13 @@
 import {Request, Response, NextFunction} from 'express';
 
-type RequestHandler = (
+export type CustomRequestHandler<T = any> = (
   req: Request,
   res: Response,
-  next?: NextFunction
+  next?: NextFunction,
+  ...rest: T[]
 ) => Promise<void | Response>;
 
-const asyncWrapper = (fn: RequestHandler) => {
+export const asyncWrapper = (fn: CustomRequestHandler) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       await fn(req, res, next);
@@ -18,7 +19,7 @@ const asyncWrapper = (fn: RequestHandler) => {
 
 /* Request params, {}, Request body, Request query */
 
-export const Controller = <T extends {[K in keyof T]: RequestHandler}>(
+export const Controller = <T extends {[K in keyof T]: CustomRequestHandler}>(
   controllers: T
 ) => {
   for (let key of Object.keys(controllers)) {
