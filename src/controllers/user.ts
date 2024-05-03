@@ -27,7 +27,6 @@ type ChangePassword = {password: string; userId: string};
 
 type Login = Pick<UserSchema, 'email' | 'password'>;
 
-//TODO Refactor finding user into middleware
 export default Controller({
   async register(req: Request<{}, {}, UserSchema>, res) {
     const {email, password, phoneNumber} = req.body;
@@ -73,14 +72,12 @@ export default Controller({
   },
 
   async verifyEmail(req: Request<{}, {}, Verify>, res) {
-    const {code, userId} = req.body;
+    const {code} = req.body;
 
-    const user = await prisma.user.findUnique({where: {id: userId}});
-
-    if (!user) throw createHttpError(404, 'User not found');
+    const {id} = req.user;
 
     const codeExists = await prisma.verficationCode.findUnique({
-      where: {userId_action: {userId, action: 'EMAIL_VERIFICATION'}}
+      where: {userId_action: {userId: id, action: 'EMAIL_VERIFICATION'}}
     });
 
     if (!codeExists)
@@ -90,7 +87,7 @@ export default Controller({
       throw createHttpError(403, 'Invalid code, retry');
 
     await prisma.user.update({
-      where: {id: user.id},
+      where: {id},
       data: {emailVerified: true}
     });
 
@@ -167,13 +164,12 @@ export default Controller({
       replyTo: 'noreply@rcn.com'
     });
 
-    return res
-      .status(200)
-      .json('Check your email for your password reset code');
+    return res.status(200).json('Password reset code sent to your mail');
   },
 
   async verifyPasswordResetCode(req: Request<{}, {}, Verify>, res) {
     const {code, userId} = req.body;
+
     const otp = await prisma.verficationCode.findFirst({
       where: {code, userId, action: 'PASSWORD_RESET'}
     });
@@ -187,27 +183,29 @@ export default Controller({
   },
 
   async changePassword(req: Request<{}, {}, ChangePassword>, res) {
-    const {password, userId} = req.body;
+    const {password} = req.body;
 
-    const user = await prisma.user.findUnique({where: {id: userId}});
-
-    if (!user) throw createHttpError(403, 'User not found');
+    const {id} = req.user;
 
     const hashedPW = await hash(password, 10);
 
-    await prisma.user.update({where: {id: userId}, data: {password: hashedPW}});
+    await prisma.user.update({where: {id}, data: {password: hashedPW}});
 
     return res.status(200).json('Password changed');
   },
 
-  //Todo Improve this function
+  //Todo Improve this function for images and others
   async updateAccount(req: Request<{}, {}, UserSchema>, res) {
-    const user = await prisma.user.findUnique({where: {id: req.user.id}});
+    const {id} = req.user;
 
-    if (!user) throw createHttpError(403, 'User not found');
-
-    await prisma.user.update({where: {id: user.id}, data: req.body});
+    await prisma.user.update({where: {id}, data: req.body});
 
     return res.status(200).json('Account details updated');
+  },
+
+  async logout(req, res) {
+    await req.logout();
+
+    res.status(200).send('Logout successful');
   }
 });

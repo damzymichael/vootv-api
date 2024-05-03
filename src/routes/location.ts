@@ -1,14 +1,15 @@
 import {Router} from 'express';
 import controller from '../controllers/location';
+import {authenticate} from '../middlewares/auth';
 
 const router = Router();
 
-router.get('/get-locations', controller.getLocations);
+router.get('/', authenticate.user, controller.getLocations);
 
-router.get('/get-location/:id', controller.getLocation);
+router.get('/:id', authenticate.user, controller.getLocation);
 
-router.post('/add-location', controller.addLocation);
+router.post('/', authenticate.admin, controller.addLocation);
 
-router.patch('/update-location/:id', controller.updateLocation);
+router.patch('/:id', authenticate.admin, controller.updateLocation);
 
 export default router;

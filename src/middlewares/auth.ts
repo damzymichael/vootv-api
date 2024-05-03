@@ -4,16 +4,32 @@ import {asyncWrapper, Controller} from '../util/requestHandler.config';
 import {CustomRequestHandler} from '../util/requestHandler.config';
 import {Request} from 'express';
 
+const logout = asyncWrapper(async (req, res, next) => {
+  req.logout = async () => {
+    const {authorization} = req.headers;
+
+    const token = authorization?.split(' ')[1];
+
+    if (!token) return true;
+
+    const authToken = await prisma.authToken.findUnique({where: {token}});
+
+    if (!authToken) return true;
+
+    await prisma.authToken.delete({where: {token: authToken.token}});
+
+    return true;
+  };
+  next();
+});
+
 type ID = {userId: string};
 
 type MiddlewareRequest = Request<ID, {}, ID>;
 
 /**Checks request body or params and verifies user */
 const verifyUser = asyncWrapper(async (req: MiddlewareRequest, res, next) => {
-  // Gets user id from body/params
-  let {userId} = req.params;
-
-  if (!userId) ({userId} = req.body);
+  const userId = req.body.userId || req.params.userId;
 
   if (!userId) throw createHttpError(403, 'Invalid ID');
 
@@ -25,6 +41,7 @@ const verifyUser = asyncWrapper(async (req: MiddlewareRequest, res, next) => {
 
   next();
 });
+
 type Role = 'USER' | 'ADMIN';
 
 const auth: CustomRequestHandler<Role> = async (req, _, next, role) => {
@@ -69,4 +86,4 @@ const authenticate = Controller({
   }
 });
 
-export {verifyUser, authenticate};
+export {verifyUser, authenticate, logout};

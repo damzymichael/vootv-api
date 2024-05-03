@@ -6,6 +6,8 @@ const upload = multer({storage: multer.memoryStorage()});
 
 const router = Router();
 
-router.post('/add', upload.single('audio'), controller.addAudio);
+//Todo Authenticate as admin before posting
+
+router.post('/', upload.single('audio'), controller.addAudio);
 
 export default router;

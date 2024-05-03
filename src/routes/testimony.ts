@@ -8,8 +8,8 @@ router.use(authenticate.user);
 
 router.get('/', controller.getTestimonies);
 
-router.post('/add-testimony', controller.addTestimony);
+router.get('/:id', controller.getTestimony);
 
-router.get('/get-testimony/:id', controller.getTestimony);
+router.post('/', controller.addTestimony);
 
 export default router;
