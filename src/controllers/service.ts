@@ -8,21 +8,24 @@ interface ServiceBody {
   startTime: string;
   endTime: string;
   theme: string;
-  locationId: string;
 }
 
 export default Controller({
-  async addService(req: Request<{}, {}, ServiceBody>, res) {
+  async addService(req: Request<{locationId: string}, {}, ServiceBody>, res) {
     const {theme, day} = req.body;
+    const {locationId} = req.params;
+
+    //TODO Check if location of locationId exists
     const serviceExists = await prisma.service.findUnique({
       where: {theme_day: {theme, day}}
     });
-    //TODO Check if location of locationId exists
+
     if (serviceExists)
       throw createHttpError(403, 'Service exists, update to continue');
 
-    await prisma.service.create({data: req.body});
+    await prisma.service.create({data: {...req.body, locationId}});
 
     return res.status(201).send('Service added');
-  }
+  },
+  async updateService() {}
 });

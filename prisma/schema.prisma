@@ -29,7 +29,9 @@ model User {
   verficationCodes VerficationCode[]
   payments         Payment[]
   testimonies      Testimony[]
-  AuthToken        AuthToken?
+  authToken        AuthToken?
+  streams          Stream[]
+  downloads        Download[]
 
   @@map("users")
 }
@@ -90,12 +92,17 @@ model Service {
 }
 
 model Audio {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
   link         String
+  size         Int
+  cloudId      String
   timeRecorded DateTime
   preacher     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  streams      Stream[]
+  downloads    Download[]
 
   @@map("audios")
 }
@@ -156,4 +163,36 @@ model AuthToken {
 
   @@index([expiresAt], map: "expiresAt_1")
   @@map("auth-tokens")
+}
+
+model Stream {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audioId   String   @db.ObjectId
+  audio     Audio    @relation(fields: [audioId], references: [id], onDelete: Cascade)
+  duration  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("streams")
+}
+
+enum Status {
+  COMPLETED
+  ONGOING
+  FAILED
+}
+
+model Download {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audioId   String   @db.ObjectId
+  audio     Audio    @relation(fields: [audioId], references: [id], onDelete: Cascade)
+  status    Status
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("downloads")
 }

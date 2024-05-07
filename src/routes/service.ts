@@ -3,6 +3,8 @@ import controller from '../controllers/service';
 
 const router = Router();
 
-router.post('/add-service', controller.addService);
+router.post('/:locationId', controller.addService);
+
+router.patch('/:id');
 
 export default router;
