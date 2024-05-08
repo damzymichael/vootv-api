@@ -12,7 +12,7 @@ enum Role {
   ADMIN
 }
 
-type AVI {
+type Image {
   secure_url String
   public_id  String
 }
@@ -23,7 +23,7 @@ model User {
   email            String            @unique
   phoneNumber      String            @unique
   dateOfBirth      DateTime?
-  avi              AVI?
+  avi              Image?
   imageUrl         String?
   password         String
   emailVerified    Boolean           @default(false)
@@ -148,7 +148,7 @@ model Program {
   theme      String
   startTime  DateTime
   endTime    DateTime
-  banner     String
+  banner     Image
   ministers  String[]
   locationId String      @db.ObjectId
   location   Location    @relation(fields: [locationId], references: [id])
