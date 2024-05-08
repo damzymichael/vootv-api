@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import {v4} from 'uuid';
 import {default_transporter} from '../util/nodemailer.config';
 import prisma from '../util/db.connection';
+import {cloudinary, uploadBuffer} from '../util/cloudinary.config';
 
 interface UserSchema {
   email: string;
@@ -14,6 +15,7 @@ interface UserSchema {
   phoneNumber: string;
   dateOfBirth?: Date;
   locationId?: string;
+  avi?: {secure_url: string; public_id: string};
 }
 
 interface Verify {
@@ -117,7 +119,8 @@ export default Controller({
 
     const token = v4();
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
-    //Todo Change to create and delete token during signout process
+    
+    //Todo Change to create, then delete token during signout process
     //Authentication token to expire after two weeks
     //? Create or update an existing token for testing purposes
     const authToken = await prisma.authToken.upsert({
@@ -194,11 +197,26 @@ export default Controller({
     return res.status(200).json('Password changed');
   },
 
-  //Todo Improve this function for images and others
+  //Todo Add rate mimiter to stop after two requests if uploading image
   async updateAccount(req: Request<{}, {}, UserSchema>, res) {
     const {id} = req.user;
 
-    await prisma.user.update({where: {id}, data: req.body});
+    let data = req.body;
+
+    if (req.file) {
+      const {buffer} = req.file;
+      if (req.user.avi.public_id) {
+        await cloudinary.uploader.destroy(req.user.avi.public_id, {
+          invalidate: true
+        });
+        await prisma.user.update({where: {id}, data: {avi: null}});
+      }
+      const response = await uploadBuffer(buffer, 'image', 'vootv-api/pfps');
+      const {secure_url, public_id} = response;
+      data = {...req.body, avi: {secure_url, public_id}};
+    }
+
+    await prisma.user.update({where: {id}, data});
 
     return res.status(200).json('Account details updated');
   },

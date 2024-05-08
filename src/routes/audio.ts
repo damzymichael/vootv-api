@@ -7,9 +7,9 @@ const upload = multer({storage: multer.memoryStorage()});
 const router = Router();
 
 //Todo Authenticate as user before sending
-router.get('/')
+router.get('/', controller.getAudios);
 
-router.get('/:id')
+router.get('/:id', controller.getAudios);
 
 //Todo Authenticate as admin before posting
 router.post('/', upload.single('audio'), controller.addAudio);

@@ -1,6 +1,9 @@
 import {Router} from 'express';
 import controller from '../controllers/user';
 import {authenticate, verifyUser, logout} from '../middlewares/auth';
+import multer from 'multer';
+
+const upload = multer({storage: multer.memoryStorage()});
 
 const router = Router();
 
@@ -10,7 +13,7 @@ router.post('/register', controller.register);
 
 router.post('/login', controller.login);
 
-router.patch('/account-info', authenticate.user, controller.updateAccount);
+router.patch('/account-info', authenticate.user, upload.single('avi'), controller.updateAccount);
 
 router.post('/password-reset-mail', controller.sendPasswordResetMail);
 

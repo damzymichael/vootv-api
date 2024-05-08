@@ -66,11 +66,12 @@ export default Controller({
     if (!audioDeleted)
       throw createHttpError('Could not delete audio, try again later');
 
-    const result = await cloudinary.uploader.destroy(audioDeleted.cloudId, {
-      invalidate: true, resource_type: 'video'
-    })
+    await cloudinary.uploader.destroy(audioDeleted.cloudId, {
+      invalidate: true,
+      resource_type: 'video'
+    });
+    // {result: 'not found'; }| {  result: 'ok';}
 
-    console.log(result)
     return res.status(200).json('Audio deleted');
   }
 });
