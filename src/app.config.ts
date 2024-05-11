@@ -9,6 +9,8 @@ import audioRoutes from './routes/audio';
 import locationRoutes from './routes/location';
 import serviceRoutes from './routes/service';
 import testimonyRoutes from './routes/testimony';
+import streamRoutes from './routes/stream';
+import downloadRoutes from './routes/download';
 import testRoutes from './test';
 
 const homeMessage = `
@@ -39,6 +41,8 @@ app.use('/audio', audioRoutes);
 app.use('/location', locationRoutes);
 app.use('/service', serviceRoutes);
 app.use('/testimony', testimonyRoutes);
+app.use('/stream', streamRoutes);
+app.use('/download', downloadRoutes);
 
 //? FOR TESTS
 app.use('/tests', testRoutes);

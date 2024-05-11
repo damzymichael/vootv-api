@@ -27,6 +27,7 @@ export default Controller({
     return res.status(200).json(audio);
   },
 
+  //Todo Trim inputs
   async addAudio(req: Request<{}, {}, Audio>, res) {
     //Attach information in form
     const {title, preacher, timeRecorded} = req.body;
@@ -51,7 +52,7 @@ export default Controller({
       }
     });
 
-    res.status(201).json('Audio created');
+    res.status(201).json('Audio added');
   },
 
   async deleteAudio(req: Request<{id: string}>, res) {

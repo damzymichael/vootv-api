@@ -9,7 +9,7 @@ const router = Router();
 //Todo Authenticate as user before sending
 router.get('/', controller.getAudios);
 
-router.get('/:id', controller.getAudios);
+router.get('/:id', controller.getAudio);
 
 //Todo Authenticate as admin before posting
 router.post('/', upload.single('audio'), controller.addAudio);

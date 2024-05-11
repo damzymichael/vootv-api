@@ -5,6 +5,7 @@ const router = Router();
 
 router.post('/:locationId', controller.addService);
 
+//Todo Patch function
 router.patch('/:id');
 
 export default router;

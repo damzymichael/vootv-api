@@ -15,7 +15,10 @@ export default Controller({
     const {theme, day} = req.body;
     const {locationId} = req.params;
 
-    //TODO Check if location of locationId exists
+    const location = await prisma.location.findUnique({where: {id: locationId}})
+
+    if(!location) throw createHttpError(404, 'Location not found');
+
     const serviceExists = await prisma.service.findUnique({
       where: {theme_day: {theme, day}}
     });
