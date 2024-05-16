@@ -31,8 +31,6 @@ export const devMode = app.get('env') === 'development';
 
 app.use(morgan('dev'));
 
-app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
-
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', 'https://vootv-admin.vercel.app');
   res.header(
@@ -42,7 +40,10 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
+
 app.use(express.json());
+
 app.use(express.urlencoded({extended: true}));
 
 app.use(cookieParser(env.COOKIE_SECRET));
