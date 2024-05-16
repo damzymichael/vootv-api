@@ -37,7 +37,9 @@ export default Controller({
   },
 
   async getPrograms(req, res) {
-    const programs = await prisma.program.findMany();
+    const programs = await prisma.program.findMany({
+      include: {location: {select: {state: true, country: true}}}
+    });
 
     return res.status(200).json(programs);
   },

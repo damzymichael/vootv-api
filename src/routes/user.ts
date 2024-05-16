@@ -11,6 +11,8 @@ const router = Router();
 
 router.use(logout);
 
+router.get('/auth', authenticate.admin)
+
 router.get('/', admin, controller.getUsers);
 
 router.get('/:id', admin, controller.getUser);

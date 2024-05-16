@@ -20,9 +20,10 @@ const logout = asyncWrapper(async (req, res, next) => {
 
     await prisma.authToken.delete({where: {token: authToken.token}});
 
+    res.clearCookie('rcn.session.token');
+
     return true;
   };
-  res.clearCookie('rcn.session.token');
   next();
 });
 
@@ -74,7 +75,7 @@ const authenticate = Controller({
     next();
   },
 
-  admin: async (req, res, next) => {
+  admin: async (req: Request<{}, {}, {}, {admin: string}>, res, next) => {
     const token = req.signedCookies['rcn.session.token'];
 
     if (!token) throw createHttpError(401, 'Unauthorized');
@@ -99,6 +100,8 @@ const authenticate = Controller({
       where: {userId: user.id},
       data: {expiresAt: twoWeeks}
     });
+
+    if (req.query.admin) return res.status(200).send('Authenticated');
 
     req.user = user;
 

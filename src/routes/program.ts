@@ -3,7 +3,7 @@ import controller from '../controllers/program';
 import {authenticate} from '../middlewares/auth';
 import multer from 'multer';
 
-const {admin} = authenticate
+const {admin} = authenticate;
 
 const upload = multer({storage: multer.memoryStorage()});
 
