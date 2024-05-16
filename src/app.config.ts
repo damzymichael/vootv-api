@@ -33,6 +33,15 @@ app.use(morgan('dev'));
 
 app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
 
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', 'https://vootv-admin.vercel.app');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  );
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
