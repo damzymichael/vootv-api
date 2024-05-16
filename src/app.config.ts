@@ -29,13 +29,13 @@ app.use(helmet());
 
 app.use(morgan('dev'));
 
+app.use(cookieParser(env.COOKIE_SECRET));
+
 app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
 
 app.use(express.json());
 
 app.use(express.urlencoded({extended: true}));
-
-app.use(cookieParser(env.COOKIE_SECRET));
 
 app.get('/', (req, res) => res.status(200).send(homeMessage));
 app.use('/user', userRoutes);
