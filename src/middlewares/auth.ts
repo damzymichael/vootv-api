@@ -76,7 +76,7 @@ const authenticate = Controller({
   admin: async (req: Request<{}, {}, {}, {admin: string}>, res, next) => {
     const token = req.signedCookies['rcn.session.token'];
 
-    if (!token) throw createHttpError(401, 'Unauthorized');
+    if (!token) throw createHttpError(401, 'Unauthorized, no token');
 
     const authToken = await prisma.authToken.findUnique({where: {token}});
 
@@ -90,7 +90,7 @@ const authenticate = Controller({
 
     if (!user) throw createHttpError(401, 'User not found');
 
-    if (user.role != 'ADMIN') throw createHttpError(401, 'Unauthorized');
+    if (user.role != 'ADMIN') throw createHttpError(401, 'Unauthorized, not an admin');
 
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
 
