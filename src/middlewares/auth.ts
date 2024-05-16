@@ -16,8 +16,6 @@ const logout = asyncWrapper(async (req, res, next) => {
 
     if (!authToken) return true;
 
-    const user = await prisma.user.findUnique({where: {id: authToken.userId}});
-
     await prisma.authToken.delete({where: {token: authToken.token}});
 
     res.clearCookie('rcn.session.token');
@@ -66,7 +64,7 @@ const authenticate = Controller({
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
 
     await prisma.authToken.update({
-      where: {userId: user.id},
+      where: {token: authToken.token},
       data: {expiresAt: twoWeeks}
     });
 
@@ -97,7 +95,7 @@ const authenticate = Controller({
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
 
     await prisma.authToken.update({
-      where: {userId: user.id},
+      where: {token: authToken.token},
       data: {expiresAt: twoWeeks}
     });
 

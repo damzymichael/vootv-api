@@ -35,7 +35,7 @@ model User {
   verficationCodes VerficationCode[]
   payments         Payment[]
   testimonies      Testimony[]
-  authToken        AuthToken?
+  authToken        AuthToken[]
   streams          Stream[]
   downloads        Download[]
 
@@ -161,7 +161,7 @@ model Program {
 model AuthToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
-  userId    String   @unique @db.ObjectId
+  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

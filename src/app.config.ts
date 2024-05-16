@@ -27,18 +27,7 @@ const app = express();
 
 app.use(helmet());
 
-export const devMode = app.get('env') === 'development';
-
 app.use(morgan('dev'));
-
-// app.use(function (req, res, next) {
-//   res.header('Access-Control-Allow-Origin', env.ADMIN_CLIENT_URL);
-//   res.header(
-//     'Access-Control-Allow-Headers',
-//     'Origin, X-Requested-With, Content-Type, Accept'
-//   );
-//   next();
-// });
 
 app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
 

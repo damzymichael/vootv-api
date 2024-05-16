@@ -142,12 +142,6 @@ export default Controller({
     const token = v4();
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
 
-    const exists = await prisma.authToken.findUnique({
-      where: {userId: user.id}
-    });
-
-    if (exists) await prisma.authToken.delete({where: {id: exists.id}});
-
     //Authentication token to expire after two weeks
     const authToken = await prisma.authToken.create({
       data: {
