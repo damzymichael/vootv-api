@@ -158,7 +158,10 @@ export default Controller({
       return res
         .cookie('rcn.session.token', authToken.token, {
           signed: true,
-          maxAge: 1000 * 60 * 60 * 24 * 14
+          maxAge: 1000 * 60 * 60 * 24 * 14,
+          sameSite: 'none',
+          secure: true,
+          httpOnly: true
         })
         .status(200)
         .send('Login successful');
