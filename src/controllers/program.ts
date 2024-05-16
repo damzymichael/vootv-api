@@ -6,18 +6,18 @@ import {uploadBuffer} from '../util/cloudinary.config';
 
 type ProgramType = 'PROGRAM' | 'EVENT';
 interface Program {
+  locationId: string;
   theme: string;
   startTime: Date;
   endTime: Date;
-  ministers: string[];
+  additionalInfo: string;
   type: ProgramType;
 }
 
 export default Controller({
-  async addProgram(req: Request<{}, {}, Program, {locationId: string}>, res) {
-    const {locationId} = req.query;
-
-    if (!locationId) throw createHttpError(403, 'No location ID');
+  async addProgram(req: Request<{}, {}, Program>, res) {
+    req.body.startTime = new Date(req.body.startTime);
+    req.body.endTime = new Date(req.body.endTime);
 
     if (!req.file) {
       throw createHttpError(403, 'No Image added');
@@ -27,20 +27,17 @@ export default Controller({
 
     const response = await uploadBuffer(buffer, 'image', 'vootv-api/banners');
 
-    const {secure_url, public_id} = response
+    const {secure_url, public_id} = response;
 
-    await prisma.program.create({data: {...req.body, banner: {secure_url, public_id}, locationId}})
+    await prisma.program.create({
+      data: {...req.body, banner: {secure_url, public_id}}
+    });
 
-    return res.status(202).send('Program Added successfully')
+    return res.status(201).send('Program Added successfully');
   },
 
-  async getPrograms(req: Request<{}, {}, {}, {type: ProgramType}>, res) {
-    const {type} = req.query;
-
-    if (type != 'PROGRAM' && type != 'EVENT')
-      throw createHttpError(403, 'Invalid type');
-
-    const programs = await prisma.program.findMany({where: {type}});
+  async getPrograms(req, res) {
+    const programs = await prisma.program.findMany();
 
     return res.status(200).json(programs);
   },

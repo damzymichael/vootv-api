@@ -30,6 +30,23 @@ type ChangePassword = {password: string; userId: string};
 type Login = Pick<UserSchema, 'email' | 'password'>;
 
 export default Controller({
+  async getUsers(req, res) {
+    const users = await prisma.user.findMany({where: {role: 'USER'}});
+
+    return res.status(200).json(users);
+  },
+
+  async getUser(req: Request<{id: string}>, res) {
+    const {id} = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: {id},
+      include: {location: {select: {state: true}}}
+    });
+
+    return res.status(200).json(user);
+  },
+
   async register(req: Request<{}, {}, UserSchema>, res) {
     const {email, password, phoneNumber} = req.body;
 
@@ -103,12 +120,17 @@ export default Controller({
     return res.status(200).json('Okay');
   },
 
-  async login(req: Request<{}, {}, Login>, res) {
+  async login(req: Request<{}, {}, Login, {admin: string}>, res) {
     const {email, password} = req.body;
+
+    const {admin} = req.query;
 
     const user = await prisma.user.findUnique({where: {email}});
 
     if (!user) throw createHttpError(403, 'Invalid email or password');
+
+    if (admin == 'true' && user.role != 'ADMIN')
+      throw createHttpError(403, 'Unknown Error Occured');
 
     const validPassword = await compare(password, user.password);
 
@@ -119,23 +141,30 @@ export default Controller({
 
     const token = v4();
     const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
-    
-    //Todo Change to create, then delete token during signout process
+
     //Authentication token to expire after two weeks
-    //? Create or update an existing token for testing purposes
-    const authToken = await prisma.authToken.upsert({
-      where: {userId: user.id},
-      create: {
+    const authToken = await prisma.authToken.create({
+      data: {
         userId: user.id,
         token,
         expiresAt: twoWeeks
-      },
-      update: {expiresAt: twoWeeks}
+      }
     });
 
-    res.setHeader('Authorization', `Bearer ${authToken.token}`);
-
     const {password: _, emailVerified, role, updatedAt, ...rest} = user;
+
+    //Todo Add other parameters to cookie
+    if (user.role == 'ADMIN') {
+      return res
+        .cookie('rcn.session.token', authToken.token, {
+          signed: true,
+          maxAge: 1000 * 60 * 60 * 24 * 14
+        })
+        .status(200)
+        .send('Login successful');
+    } else {
+      res.setHeader('Authorization', `Bearer ${authToken.token}`);
+    }
 
     return res.status(200).json({message: 'Log in success', user: rest});
   },

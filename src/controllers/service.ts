@@ -5,8 +5,7 @@ import prisma from '../util/db.connection';
 
 interface ServiceBody {
   day: string;
-  startTime: string;
-  endTime: string;
+  startTimes: string[];
   theme: string;
 }
 
@@ -15,9 +14,11 @@ export default Controller({
     const {theme, day} = req.body;
     const {locationId} = req.params;
 
-    const location = await prisma.location.findUnique({where: {id: locationId}})
+    const location = await prisma.location.findUnique({
+      where: {id: locationId}
+    });
 
-    if(!location) throw createHttpError(404, 'Location not found');
+    if (!location) throw createHttpError(404, 'Location not found');
 
     const serviceExists = await prisma.service.findUnique({
       where: {theme_day: {theme, day}}
@@ -28,7 +29,7 @@ export default Controller({
 
     await prisma.service.create({data: {...req.body, locationId}});
 
-    return res.status(201).send('Service added');
+    return res.status(201).send(`Service added for RCN ${location.state}`);
   },
   async updateService() {}
 });

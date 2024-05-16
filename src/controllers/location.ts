@@ -51,7 +51,12 @@ export default Controller({
 
     if (!location) throw createHttpError(403, 'Location not found');
 
-    await prisma.location.update({where: {id: location.id}, data: req.body});
+    const {id: locationId, ...rest} = location;
+
+    await prisma.location.update({
+      where: {id: location.id},
+      data: {...rest, ...req.body}
+    });
 
     return res.status(200).send('Location details updated');
   }

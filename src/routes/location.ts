@@ -4,9 +4,10 @@ import {authenticate} from '../middlewares/auth';
 
 const router = Router();
 
-router.get('/', authenticate.user, controller.getLocations);
+//Todo Authenticate user
+router.get('/', controller.getLocations);
 
-router.get('/:id', authenticate.user, controller.getLocation);
+router.get('/:id', controller.getLocation);
 
 router.post('/', authenticate.admin, controller.addLocation);
 

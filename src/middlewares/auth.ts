@@ -1,14 +1,14 @@
 import createHttpError from 'http-errors';
 import prisma from '../util/db.connection';
 import {asyncWrapper, Controller} from '../util/requestHandler.config';
-import {CustomRequestHandler} from '../util/requestHandler.config';
 import {Request} from 'express';
 
 const logout = asyncWrapper(async (req, res, next) => {
   req.logout = async () => {
     const {authorization} = req.headers;
 
-    const token = authorization?.split(' ')[1];
+    const token =
+      authorization?.split(' ')[1] || req.signedCookies['rcn.session.token'];
 
     if (!token) return true;
 
@@ -16,10 +16,13 @@ const logout = asyncWrapper(async (req, res, next) => {
 
     if (!authToken) return true;
 
+    const user = await prisma.user.findUnique({where: {id: authToken.userId}});
+
     await prisma.authToken.delete({where: {token: authToken.token}});
 
     return true;
   };
+  res.clearCookie('rcn.session.token');
   next();
 });
 
@@ -42,47 +45,64 @@ const verifyUser = asyncWrapper(async (req: MiddlewareRequest, res, next) => {
   next();
 });
 
-type Role = 'USER' | 'ADMIN';
-
-const auth: CustomRequestHandler<Role> = async (req, _, next, role) => {
-  const {authorization} = req.headers;
-
-  const token = authorization?.split(' ')[1];
-
-  if (!token) throw createHttpError(401, 'Unauthorized');
-
-  const authToken = await prisma.authToken.findUnique({where: {token}});
-
-  if (!authToken) throw createHttpError(401, 'Session expired');
-
-  const user = await prisma.user.findUnique({where: {id: authToken.userId}});
-
-  if (role === 'USER' && !user) throw createHttpError(404, 'User not found');
-
-  if (role === 'ADMIN' && (!user || user.role !== 'ADMIN')) {
-    throw createHttpError(405, 'Not allowed');
-  }
-
-  const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
-
-  await prisma.authToken.update({
-    where: {userId: user.id},
-    data: {expiresAt: twoWeeks}
-  });
-
-  req.user = user;
-
-  next();
-};
-
-/**Authenticates user or admin through headers in request */
+/**Authenticates user or admin through headers in request or cookie for admin */
 const authenticate = Controller({
   async user(req, res, next) {
-    await auth(req, res, next, 'USER');
+    const {authorization} = req.headers;
+
+    const token = authorization?.split(' ')[1];
+
+    if (!token) throw createHttpError(401, 'Unauthorized');
+
+    const authToken = await prisma.authToken.findUnique({where: {token}});
+
+    if (!authToken) throw createHttpError(401, 'Session expired');
+
+    const user = await prisma.user.findUnique({where: {id: authToken.userId}});
+
+    if (!user) throw createHttpError(404, 'User not found');
+
+    const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    await prisma.authToken.update({
+      where: {userId: user.id},
+      data: {expiresAt: twoWeeks}
+    });
+
+    req.user = user;
+
+    next();
   },
 
   admin: async (req, res, next) => {
-    await auth(req, res, next, 'ADMIN');
+    const token = req.signedCookies['rcn.session.token'];
+
+    if (!token) throw createHttpError(401, 'Unauthorized');
+
+    const authToken = await prisma.authToken.findUnique({where: {token}});
+
+    if (!authToken) {
+      res.clearCookie('rcn.session.token');
+
+      throw createHttpError(401, 'Session expired');
+    }
+
+    const user = await prisma.user.findUnique({where: {id: authToken.userId}});
+
+    if (!user) throw createHttpError(401, 'User not found');
+
+    if (user.role != 'ADMIN') throw createHttpError(401, 'Unauthorized');
+
+    const twoWeeks = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    await prisma.authToken.update({
+      where: {userId: user.id},
+      data: {expiresAt: twoWeeks}
+    });
+
+    req.user = user;
+
+    next();
   }
 });
 

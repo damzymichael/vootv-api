@@ -86,8 +86,7 @@ model Service {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   day        String
   theme      String
-  startTime  String
-  endTime    String
+  startTimes String[]
   locationId String   @db.ObjectId
   location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
@@ -143,17 +142,18 @@ enum ProgramType {
 }
 
 model Program {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
-  type       ProgramType
-  theme      String
-  startTime  DateTime
-  endTime    DateTime
-  banner     Image
-  ministers  String[]
-  locationId String      @db.ObjectId
-  location   Location    @relation(fields: [locationId], references: [id])
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  type           ProgramType
+  theme          String
+  startTime      DateTime
+  endTime        DateTime
+  banner         Image
+  venue          String?
+  additionalInfo String?
+  locationId     String?     @db.ObjectId
+  location       Location?   @relation(fields: [locationId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@map("programs")
 }
