@@ -160,7 +160,7 @@ export default Controller({
         .cookie('rcn.session.token', authToken.token, {
           signed: true,
           maxAge: 1000 * 60 * 60 * 24 * 14,
-          sameSite: 'none',
+          sameSite: 'lax',
           secure: true,
           httpOnly: true,
           domain: env.ADMIN_CLIENT_URL
