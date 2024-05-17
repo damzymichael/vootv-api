@@ -7,6 +7,7 @@ import {v4} from 'uuid';
 import {default_transporter} from '../util/nodemailer.config';
 import prisma from '../util/db.connection';
 import {cloudinary, uploadBuffer} from '../util/cloudinary.config';
+import env from '../util/env';
 
 interface UserSchema {
   email: string;
@@ -161,7 +162,8 @@ export default Controller({
           maxAge: 1000 * 60 * 60 * 24 * 14,
           sameSite: 'none',
           secure: true,
-          httpOnly: true
+          httpOnly: true,
+          domain: env.ADMIN_CLIENT_URL
         })
         .status(200)
         .send('Login successful');
