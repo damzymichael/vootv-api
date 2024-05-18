@@ -12,7 +12,9 @@ interface Audio {
 
 export default Controller({
   async getAudios(req, res) {
-    const audios = await prisma.audio.findMany();
+    const audios = await prisma.audio.findMany({
+      include: {streams: {select: {id: true}}, downloads: {select: {id: true}}}
+    });
 
     res.status(200).json(audios);
   },
@@ -20,7 +22,13 @@ export default Controller({
   async getAudio(req: Request<{id: string}>, res) {
     const {id} = req.params;
 
-    const audio = await prisma.audio.findUnique({where: {id}});
+    const audio = await prisma.audio.findUnique({
+      where: {id},
+      include: {
+        streams: {include: {user: {select: {fullName: true}}}},
+        downloads: {include: {user: {select: {fullName: true}}}}
+      }
+    });
 
     if (!audio) throw createHttpError("Audio doesn't exist");
 

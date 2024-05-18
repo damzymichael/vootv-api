@@ -1,4 +1,4 @@
-import {Request} from 'express';
+import express, {Request} from 'express';
 import {Controller} from '../util/requestHandler.config';
 import {hash, compare} from 'bcryptjs';
 import createHttpError from 'http-errors';
@@ -9,6 +9,7 @@ import prisma from '../util/db.connection';
 import {cloudinary, uploadBuffer} from '../util/cloudinary.config';
 import env from '../util/env';
 
+const app = express();
 interface UserSchema {
   email: string;
   fullName: string;
@@ -161,9 +162,8 @@ export default Controller({
           signed: true,
           maxAge: 1000 * 60 * 60 * 24 * 14,
           sameSite: 'lax',
-          secure: true,
-          httpOnly: true,
-          domain: env.ADMIN_CLIENT_URL
+          secure: app.get('env') === 'production',
+          httpOnly: true
         })
         .status(200)
         .send('Login successful');

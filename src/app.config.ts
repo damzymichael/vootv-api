@@ -17,10 +17,10 @@ import testRoutes from './test';
 import env from './util/env';
 
 const homeMessage = `
-  <div style="display: flex; align-items: center; justify-content: center; height: 90vh"> 
-    <h1 style="font-size: 72px; background: -webkit-linear-gradient(45deg, #09009f, #00ff95 80%); -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;">VOO TV REST API</h1>
-  </div>
+<div style="display: flex; align-items: center; justify-content: center; height: 90vh"> 
+<h1 style="font-size: 72px; background: -webkit-linear-gradient(45deg, #09009f, #00ff95 80%); -webkit-background-clip: text;
+-webkit-text-fill-color: transparent;">VOO TV REST API</h1>
+</div>
 `;
 
 const app = express();
@@ -29,9 +29,9 @@ app.use(helmet());
 
 app.use(morgan('dev'));
 
-app.use(cookieParser(env.COOKIE_SECRET));
-
 app.use(cors({origin: [env.ADMIN_CLIENT_URL], credentials: true}));
+
+app.use(cookieParser(env.COOKIE_SECRET));
 
 app.use(express.json());
 
