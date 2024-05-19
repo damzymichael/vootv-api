@@ -18,7 +18,11 @@ const logout = asyncWrapper(async (req, res, next) => {
 
     await prisma.authToken.delete({where: {token: authToken.token}});
 
-    res.clearCookie('rcn.session.token');
+    res.clearCookie('rcn.session.token', {
+      signed: true,
+      sameSite: 'none',
+      secure: true
+    });
 
     return true;
   };
@@ -83,8 +87,8 @@ const authenticate = Controller({
     if (!authToken) {
       res.clearCookie('rcn.session.token', {
         signed: true,
-        secure: true,
-        httpOnly: true
+        sameSite: 'none',
+        secure: true
       });
 
       throw createHttpError(401, 'Session expired');
