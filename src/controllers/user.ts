@@ -162,7 +162,7 @@ export default Controller({
           signed: true,
           maxAge: 1000 * 60 * 60 * 24 * 14,
           sameSite: 'none',
-          secure: app.get('env') === 'production',
+          secure: true,
           httpOnly: true
         })
         .status(200)
