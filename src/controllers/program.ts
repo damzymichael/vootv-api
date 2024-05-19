@@ -2,7 +2,7 @@ import {Controller} from '../util/requestHandler.config';
 import {Request} from 'express';
 import createHttpError from 'http-errors';
 import prisma from '../util/db.connection';
-import {uploadBuffer} from '../util/cloudinary.config';
+import {uploadBuffer, cloudinary} from '../util/cloudinary.config';
 
 type ProgramType = 'PROGRAM' | 'EVENT';
 interface Program {
@@ -50,5 +50,30 @@ export default Controller({
     const program = await prisma.program.findUnique({where: {id}});
 
     return res.status(200).json(program);
+  },
+
+  async updateProgram() {
+    //Todo Delete file in cloudinary if a file is sent
+  },
+
+  async deleteProgram(req: Request<{id: string}>, res) {
+    const {id} = req.params;
+
+    const program = await prisma.program.findUnique({where: {id}});
+
+    if (!program) throw createHttpError(404, 'Audio not found');
+
+    const deleted = await prisma.program.delete({where: {id: program.id}});
+
+    if (!deleted)
+      throw createHttpError('Could not delete program, try again later');
+
+    await cloudinary.uploader.destroy(deleted.banner.public_id, {
+      invalidate: true,
+      resource_type: 'image'
+    });
+    // {result: 'not found'; }| {  result: 'ok';}
+
+    return res.status(200).json('Program deleted');
   }
 });
