@@ -83,7 +83,6 @@ const authenticate = Controller({
     if (!authToken) {
       res.clearCookie('rcn.session.token', {
         signed: true,
-        sameSite: 'none',
         secure: true,
         httpOnly: true
       });
