@@ -12,6 +12,7 @@ interface Program {
   endTime: Date;
   additionalInfo: string;
   type: ProgramType;
+  banner: {secure_url: string; public_id: string};
 }
 
 export default Controller({
@@ -52,8 +53,40 @@ export default Controller({
     return res.status(200).json(program);
   },
 
-  async updateProgram() {
-    //Todo Delete file in cloudinary if a file is sent
+  async updateProgram(req: Request<{id: string}, {}, Program>, res) {
+    const {id} = req.params;
+
+    const program = await prisma.program.findUnique({where: {id}});
+
+    if (!program) throw createHttpError(404, 'Program doesnt exist');
+
+    req.body.startTime = new Date(req.body.startTime);
+    req.body.endTime = new Date(req.body.endTime);
+
+    //? Delete picture in cloudinary and add new one if picture is sent
+    if (req.file) {
+      await cloudinary.uploader.destroy(program.banner.public_id, {
+        invalidate: true,
+        resource_type: 'image'
+      });
+
+      const buffer = req.file.buffer;
+
+      const response = await uploadBuffer(buffer, 'image', 'vootv-api/banners');
+
+      const {secure_url, public_id} = response;
+
+      req.body.banner = {secure_url, public_id};
+    }
+
+    const {id: programId, ...rest} = program;
+
+    await prisma.program.update({
+      where: {id: program.id},
+      data: {...rest, ...req.body}
+    });
+
+    res.status(200).send('Updated successfully');
   },
 
   async deleteProgram(req: Request<{id: string}>, res) {
