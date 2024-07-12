@@ -61,12 +61,12 @@ const options: swaggerJsdoc.Options = {
       title: 'Voice of one TV API',
       version
     },
-    servers: [
-      {
-        url: 'http://localhost:4000',
-        description: 'Development server'
-      }
-    ]
+    // servers: [
+    //   {
+    //     url: 'http://localhost:4000',
+    //     description: 'Development server'
+    //   }
+    // ]
   },
   apis: [
     path.join(__dirname, './swagger-docs/users.yaml'),
