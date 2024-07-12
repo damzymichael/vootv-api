@@ -81,6 +81,10 @@ const options: swaggerJsdoc.Options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  '/api-docs',
+  express.static(path.join(__dirname, 'node_modules/swagger-ui-dist'))
+);
 
 //Not found
 app.use((req, res, next) => next(createHttpError(404, 'Endpoint not found')));
