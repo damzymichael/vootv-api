@@ -45,8 +45,8 @@ app.get('/', (req, res) => res.status(200).send(homeMessage));
 
 app.use((req, res, next) => {
   console.log(path.resolve(__dirname, './swagger-docs/users.yaml'));
-  next()
-})
+  next();
+});
 
 app.use('/user', userRoutes);
 app.use('/audio', audioRoutes);
@@ -66,8 +66,12 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Voice of one TV API',
       version
-    }
+    },
+    servers: [
+      {url: 'https://vootv-api.vercel.app', description: 'Production server'}
+    ]
   },
+
   apis: [
     path.resolve(__dirname, './swagger-docs/users.yaml'),
     path.resolve(__dirname, './swagger-docs/testimonies.yaml')
