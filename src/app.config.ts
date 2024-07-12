@@ -42,6 +42,12 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.get('/', (req, res) => res.status(200).send(homeMessage));
+
+app.use((req, res, next) => {
+  console.log(path.resolve(__dirname, './swagger-docs/users.yaml'));
+  next()
+})
+
 app.use('/user', userRoutes);
 app.use('/audio', audioRoutes);
 app.use('/location', locationRoutes);
@@ -60,17 +66,11 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Voice of one TV API',
       version
-    },
-    // servers: [
-    //   {
-    //     url: 'http://localhost:4000',
-    //     description: 'Development server'
-    //   }
-    // ]
+    }
   },
   apis: [
-    path.join(__dirname, './swagger-docs/users.yaml'),
-    path.join(__dirname, './swagger-docs/testimonies.yaml')
+    path.resolve(__dirname, './swagger-docs/users.yaml'),
+    path.resolve(__dirname, './swagger-docs/testimonies.yaml')
   ]
 };
 

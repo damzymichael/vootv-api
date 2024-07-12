@@ -4,7 +4,7 @@ import {authenticate} from '../middlewares/auth';
 
 const router = Router();
 
-router.use(authenticate.user);
+// router.use(authenticate.user);
 
 router.get('/', controller.getTestimonies);
 
