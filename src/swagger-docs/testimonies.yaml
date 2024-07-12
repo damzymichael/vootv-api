@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: Testimonies API
+  version: 1.0.0
+tags:
+  name: Testimonies
+  description: For the testimonies
+paths:
+  /testimonies:
+    get:
+      tags: 
+        - Testimonies
+      summary: Get all testimonies
+      responses:
+        '200':
+          description: A list of users

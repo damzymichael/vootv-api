@@ -13,6 +13,10 @@ import testimonyRoutes from './routes/testimony';
 import streamRoutes from './routes/stream';
 import downloadRoutes from './routes/download';
 import programRoutes from './routes/program';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import {version} from '../package.json';
+import path from 'path';
 import testRoutes from './test';
 import env from './util/env';
 
@@ -49,6 +53,30 @@ app.use('/program', programRoutes);
 
 //? FOR TESTS
 app.use('/tests', testRoutes);
+
+const options: swaggerJsdoc.Options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Voice of one TV API',
+      version
+    },
+    servers: [
+      {
+        url: 'http://localhost:4000',
+        description: 'Development server'
+      }
+    ]
+  },
+  apis: [
+    path.join(__dirname, './swagger-docs/users.yaml'),
+    path.join(__dirname, './swagger-docs/testimonies.yaml')
+  ]
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //Not found
 app.use((req, res, next) => next(createHttpError(404, 'Endpoint not found')));
